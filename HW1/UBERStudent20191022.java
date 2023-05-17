@@ -16,7 +16,6 @@ public class UBERStudent20191022 {
 
 	public static class UBERMapper extends Mapper<Object, Text, Text, Text>
 	{
-		private final static IntWritable one = new IntWritable(1);
 		private Text uberKey = new Text();
 		private Text uberValue = new Text();
 
@@ -24,28 +23,29 @@ public class UBERStudent20191022 {
 		{
 			StringTokenizer itr = new StringTokenizer(value.toString(), ",");
 			
-			String region = itr.nextToken();
-			String date = itr.nextToken();
+			String region = itr.nextToken().trim();
+			String date = itr.nextToken().trim();
 			
-			String trips = itr.nextToken();
-			String vehicles = itr.nextToken();
+			String trips = itr.nextToken().trim();
+			String vehicles = itr.nextToken().trim();
 			
-			SimpleDateFormat df = new SimpleDateFormat("MM/dd/yyyy");
-			String[] week = {"MON", "TUE", "WED", "THR", "FRI", "SAT", "SUN"};
+			String[] week = {"SUN", "MON", "TUE", "WED", "THR", "FRI", "SAT"};
+			String day = "";
 			
-			Date d = new Date();
-			Calendar cal = Calendar.getInstance();
 			try {
-				d = df.parse(date);
+				SimpleDateFormat df = new SimpleDateFormat("MM/dd/yyyy");
+				Date d = df.parse(date);
+				
+				Calendar cal = Calendar.getInstance();
 				cal.setTime(d);
+				
+				int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 1;
+				day = week[dayOfWeek];
 				
 			} catch(Exception e) {
 				e.printStackTrace();
 			}
 		
-			int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 1;
-			String day = week[dayOfWeek];
-			
 			uberKey.set(region +","+ day);
 			uberValue.set(trips +","+ vehicles);
 			
@@ -65,6 +65,7 @@ public class UBERStudent20191022 {
 			for (Text val : values) 
 			{
 				StringTokenizer itr = new StringTokenizer(val.toString(), ",");
+				
 				int trips = Integer.parseInt(itr.nextToken().trim());
 				int vehicles = Integer.parseInt(itr.nextToken().trim());
 				
@@ -95,6 +96,9 @@ public class UBERStudent20191022 {
 		
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
+		
+		job.setInputFormatClass(TextInputFormat.class);
+    		job.setOutputFormatClass(TextOutputFormat.class);
 		
 		FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
 		FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
