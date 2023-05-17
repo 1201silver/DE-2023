@@ -1,7 +1,7 @@
 import java.io.IOException;
 import java.util.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.FileSystem;
@@ -18,38 +18,65 @@ public class UBERStudent20191022 {
 	{
 		private Text uberKey = new Text();
 		private Text uberValue = new Text();
+		
+		String d = "";
 
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException 
 		{
+		
 			StringTokenizer itr = new StringTokenizer(value.toString(), ",");
 			
-			String region = itr.nextToken().trim();
-			String date = itr.nextToken().trim();
-			
-			String trips = itr.nextToken().trim();
-			String vehicles = itr.nextToken().trim();
-			
-			String[] week = {"SUN", "MON", "TUE", "WED", "THR", "FRI", "SAT"};
-			String day = "";
-			
-			try {
-				SimpleDateFormat df = new SimpleDateFormat("MM/dd/yyyy");
-				Date d = df.parse(date);
-				
-				Calendar cal = Calendar.getInstance();
-				cal.setTime(d);
-				
-				int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 1;
-				day = week[dayOfWeek];
-				
-			} catch(Exception e) {
-				e.printStackTrace();
-			}
+			String region = itr.nextToken();
+			String date = itr.nextToken();
 		
-			uberKey.set(region +","+ day);
+			StringTokenizer itr2 = new StringTokenizer(date, "/");
+		
+			while(itr2.hasMoreTokens()) {
+				int month = Integer.parseInt(itr2.nextToken());
+				int day = Integer.parseInt(itr2.nextToken());
+				int year = Integer.parseInt(itr2.nextToken());
+				
+				LocalDate ld = LocalDate.of(year, month, day);
+				DayOfWeek dow = ld.getDayOfWeek();
+				int dayOfWeek = dow.getValue();
+				
+				switch(dayOfWeek) {
+					case 1:
+						d = "MON";
+						break;
+					case 2:
+						d = "TUE";
+						break;
+					case 3:
+						d = "WED";
+						break;
+					case 4:
+						d = "THR";
+						break;
+					case 5:
+						d = "FRI";
+						break;
+					case 6:
+						d = "SAT";
+						break;
+					case 7:
+						d = "SUN";
+						break;
+					default:
+						d = "error";
+						break;
+				}
+				
+			}
+			
+			
+			String vehicles = itr.nextToken();
+			String trips = itr.nextToken();
+			
+			uberKey.set(region +","+ d);
 			uberValue.set(trips +","+ vehicles);
 			
-			context.write(uberKey, uberValue);		
+			context.write(uberKey, uberValue);
 		}
 	}
 
@@ -64,16 +91,12 @@ public class UBERStudent20191022 {
 			
 			for (Text val : values) 
 			{
-				StringTokenizer itr = new StringTokenizer(val.toString(), ",");
-				
-				int trips = Integer.parseInt(itr.nextToken().trim());
-				int vehicles = Integer.parseInt(itr.nextToken().trim());
-				
-				sumT += trips;
-				sumV += vehicles;
+				String data[] = (val.toString().split(","));
+				sumT += Integer.parseInt(data[0]);
+				sumV += Integer.parseInt(data[1]);
 			
 			}
-			sumValue.set(sumT +","+ sumV);
+			sumValue.set(String.valueOf(sumT) +","+ String.valueOf(sumV));
 			context.write(key, sumValue);
 		}
 	}
@@ -96,9 +119,6 @@ public class UBERStudent20191022 {
 		
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
-		
-		job.setInputFormatClass(TextInputFormat.class);
-    		job.setOutputFormatClass(TextOutputFormat.class);
 		
 		FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
 		FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
