@@ -70,7 +70,6 @@ public class YouTubeStudent20191022 {
 			itr.nextToken();
 			double rating = Double.parseDouble(itr.nextToken());
 			
-			
 			ytKey.set(category);
 			ytValue.set(rating);
 			
@@ -137,6 +136,9 @@ public class YouTubeStudent20191022 {
 		
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(DoubleWritable.class);
+		
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(DoubleWritable.class);
 		
 		FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
 		FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
