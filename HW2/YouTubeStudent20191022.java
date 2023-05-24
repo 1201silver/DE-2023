@@ -54,18 +54,13 @@ public class YouTubeStudent20191022 {
 	{
 		private PriorityQueue<YouTube> queue;
 		private Comparator<YouTube> comp = new YouTubeComparator();
+		
 		private Text ytKey = new Text();
 		private DoubleWritable ytValue = new DoubleWritable();
 		private int topk;
 
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException 
 		{
-			/*String[] line = value.toString().split("|");
-			
-			String category = line[3];
-			double rating = Double.parseDouble(line[6]);*/
-			
-			
 			StringTokenizer itr = new StringTokenizer(value.toString(), "|");
 			itr.nextToken();
 			itr.nextToken();
@@ -91,13 +86,13 @@ public class YouTubeStudent20191022 {
 
 		public void reduce(Text key, Iterable<DoubleWritable> values, Context context) throws IOException, InterruptedException 
 		{	
-			int size = 0;
+			int len = 0;
 			double sum = 0;
 			for(DoubleWritable val: values){
 				sum += val.get();
-				size++;
+				len++;
 			}	
-			double rating = sum / size;
+			double rating = sum / len;
 			
 			insertEmp(queue, key.toString(), rating, topk);
 		}
@@ -136,7 +131,6 @@ public class YouTubeStudent20191022 {
 		
 		job.setJarByClass(YouTubeStudent20191022.class);
 		job.setMapperClass(YouTubeMapper.class);
-		job.setCombinerClass(YouTubeReducer.class);
 		job.setReducerClass(YouTubeReducer.class);
 		
 		job.setNumReduceTasks(1);
