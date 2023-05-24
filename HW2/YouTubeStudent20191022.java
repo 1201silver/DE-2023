@@ -98,7 +98,7 @@ public class YouTubeStudent20191022 {
 				size++;
 			}	
 			double r = sum / size;
-			String s = String.format("%.4f", rating);
+			String s = String.format("%.4f", r);
 			double rating = Double.parseDouble(s);
 			insertEmp(queue, key.toString(), rating, topk);
 		}
