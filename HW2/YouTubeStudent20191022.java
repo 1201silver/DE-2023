@@ -73,8 +73,21 @@ public class YouTubeStudent20191022 {
 			
 			ytKey.set(category);
 			ytValue.set(rating);
-			
+			//insertEmp(queue, category, rating, topk);
 			context.write(ytKey, ytValue);
+		}
+		
+		protected void setup(Context context) throws IOException, InterruptedException {
+			Configuration conf = context.getConfiguration();
+			topk = conf.getInt("topk", -1);
+			queue = new PriorityQueue<YouTube>(topk, comp);
+		}
+		
+		protected void cleanup(Context context) throws IOException, InterruptedException {
+			while(queue.size() != 0) {
+				YouTube yt = (YouTube) queue.remove();
+				context.write(new Text(yt.getCategory()), new DoubleWritable(yt.getRating()));
+			}
 		}
 	}
 
@@ -104,9 +117,16 @@ public class YouTubeStudent20191022 {
 		}
 		
 		protected void cleanup(Context context) throws IOException, InterruptedException {
+			ArrayList <YouTube> arr = new ArrayList<YouTube>();
 			while(queue.size() != 0) {
 				YouTube yt = (YouTube) queue.remove();
-				context.write(new Text(yt.getCategory()), new DoubleWritable(yt.getRating()));
+				arr.add(yt);
+				//context.write(new Text(yt.getCategory()), new DoubleWritable(yt.getRating()));
+			}
+			
+			Collections.reverse(arr);
+			for(YouTube a: arr) {
+				context.write(new Text(a.getCategory()), new DoubleWritable(a.getRating()));
 			}
 		}
 	}
@@ -137,9 +157,6 @@ public class YouTubeStudent20191022 {
 		
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(DoubleWritable.class);
-		
-		job.setMapOutputKeyClass(Text.class);
-		job.setMapOutputValueClass(DoubleWritable.class);
 		
 		FileInputFormat.addInputPath(job, new Path(otherArgs[0]));
 		FileOutputFormat.setOutputPath(job, new Path(otherArgs[1]));
